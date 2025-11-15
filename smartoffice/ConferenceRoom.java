@@ -1,11 +1,11 @@
 package smartoffice;
 
-import java.util.Objects; 
+// import java.util.Objects; // <-- This import is now removed.
 
 /**
  * Manages the booking and scheduling of a conference room.
  * Simplified to use a fixed-size array for bookings.
- * Removed StringBuilder.
+ * Removed StringBuilder and Objects import.
  */
 public class ConferenceRoom {
     private String roomId;
@@ -56,12 +56,12 @@ public class ConferenceRoom {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Booking booking = (Booking) o;
+            // A booking is unique by its time slot within this room
             return timeSlot.equals(booking.timeSlot);
         }
 
-        public int hashCode() {
-            return Objects.hash(timeSlot);
-        }
+        // --- hashCode() method has been removed ---
+        
     } // --- End of nested Booking class ---
 
     // --- ConferenceRoom methods ---
@@ -130,20 +130,13 @@ public class ConferenceRoom {
         }
     }
 
-    /**
-     * Gets a string showing the room's availability.
-     * @return A string listing all current bookings.
-     */
     public String getAvailability() {
         if (bookingCount == 0) {
             return "Room " + roomId + " (Cap: " + capacity + ") is completely free.";
         }
         
-        // --- CHANGED ---
-        // Start with a base string instead of StringBuilder
         String report = "Bookings for " + roomId + ":\n";
         
-        // Loop and append to the string using +=
         for (int i = 0; i < bookingCount; i++) {
             report += "  - " + bookings[i].toString() + "\n";
         }
