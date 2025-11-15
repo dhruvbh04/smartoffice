@@ -1,10 +1,10 @@
 package smartoffice;
 
-// No more imports from java.util (except Scanner, which is in Main)
+// No more imports from java.util
 
 /**
  * The main class for the Smart Office Management System.
- * Simplified to use fixed-size arrays instead of ArrayLists.
+ * Updated to use inheritance (Admin, Manager, Employee) and 'instanceof'.
  */
 public class SmartOfficeSystem {
     // Define maximum sizes for our arrays
@@ -12,7 +12,7 @@ public class SmartOfficeSystem {
     private static final int MAX_DEVICES = 100;
     private static final int MAX_ROOMS = 20;
 
-    // Use simple arrays instead of Lists or Maps
+    // This array now holds User, Admin, Manager, and Employee objects
     private User[] users;
     private AbstractDevice[] devices;
     private ConferenceRoom[] rooms;
@@ -24,7 +24,7 @@ public class SmartOfficeSystem {
     
     private AttendanceSystem attendanceSystem;
     private OfficeLogger logger;
-    private User currentUser;
+    private User currentUser; // This can hold any object of type User (Admin, Manager, etc.)
 
     public SmartOfficeSystem() {
         // Initialize the arrays with their maximum size
@@ -45,15 +45,15 @@ public class SmartOfficeSystem {
     }
 
     /**
-     * Populates the system with sample data using array indexing.
+     * Populates the system with sample data using the new user classes.
      */
     private void initializeData() {
-        // Add items to arrays and increment the counter
-        users[userCount] = new User("admin", "admin123", "ADMIN");
+        // Add items to arrays using the new classes
+        users[userCount] = new Admin("admin", "admin123");
         userCount++;
-        users[userCount] = new User("manager", "manager123", "MANAGER");
+        users[userCount] = new Manager("manager", "manager123");
         userCount++;
-        users[userCount] = new User("emp", "EMPLOYEE"); // Uses the 2nd constructor
+        users[userCount] = new Employee("emp"); // Uses the default password constructor
         userCount++;
 
         // Add devices
@@ -76,7 +76,6 @@ public class SmartOfficeSystem {
         logger.logActivity("System initialized with sample data.");
         logger.logMultipleEvents("SystemStart", "DataLoaded", "Ready");
         
-        // Find the device to call setEnergyUsage
         AbstractDevice ac = findDeviceById("A1");
         if (ac != null) {
             ac.setEnergyUsage("Initial", 2100.0, 2200.0, 2150.0);
@@ -84,14 +83,16 @@ public class SmartOfficeSystem {
     }
 
     /**
-     * Simulates the user login process by looping through the array.
+     * Simulates the user login process.
+     * This method works perfectly with inheritance due to polymorphism.
      */
     public boolean login(String username, String password) {
-        // Loop from 0 to userCount (not users.length)
         for (int i = 0; i < userCount; i++) {
             User user = users[i];
+            // user.checkPassword() works if user is Admin, Manager, or Employee
             if (user.getUsername().equals(username) && user.checkPassword(password)) {
                 this.currentUser = user;
+                // user.getRole() will call the specific version from Admin, Manager, etc.
                 System.out.println("Login successful. Welcome, " + user.getUsername() + " (" + user.getRole() + ")");
                 logger.logActivity("Login success for user: " + username);
                 return true;
@@ -127,7 +128,6 @@ public class SmartOfficeSystem {
     private AbstractDevice findDeviceById(String deviceId) {
         for (int i = 0; i < deviceCount; i++) {
             AbstractDevice device = devices[i];
-            // Use equalsIgnoreCase for a robust check
             if (device.getDeviceId().equalsIgnoreCase(deviceId)) {
                 return device;
             }
@@ -150,22 +150,21 @@ public class SmartOfficeSystem {
 
     public void displayAllDeviceStatus() {
         System.out.println("\n--- All Device Status ---");
-        // Loop from 0 to deviceCount
         for (int i = 0; i < deviceCount; i++) {
             System.out.println(devices[i].getStatus());
         }
     }
 
     public void controlDevice(String deviceId, String action) {
-        // Find the device using the helper method
         AbstractDevice device = findDeviceById(deviceId);
         if (device == null) {
             System.out.println("Error: Device '" + deviceId + "' not found.");
             return;
         }
 
-        // Role-Based Access Check (using String.equals)
-        if (currentUser.getRole().equals("EMPLOYEE") && device.roomLocation.equals("Main Office")) {
+        // Role-Based Access Check using 'instanceof'
+        // This checks if the 'currentUser' object is an instance of the 'Employee' class
+        if (currentUser instanceof Employee && device.roomLocation.equals("Main Office")) {
             System.out.println("Access Denied: Employees can only control devices in common areas.");
             logger.logActivity("Access Denied for " + currentUser.getUsername() + " on " + deviceId);
             return;
@@ -190,14 +189,12 @@ public class SmartOfficeSystem {
 
     public void displayRoomAvailability() {
         System.out.println("\n--- Room Availability ---");
-        // Loop from 0 to roomCount
         for (int i = 0; i < roomCount; i++) {
             System.out.println(rooms[i].getAvailability());
         }
     }
 
     public void bookRoom(String roomId, String timeSlot) {
-        // Find the room using the helper method
         ConferenceRoom room = findRoomById(roomId);
         if (room == null) {
             System.out.println("Error: Room '" + roomId + "' not found.");
@@ -222,11 +219,13 @@ public class SmartOfficeSystem {
     }
 
     public void generateAttendanceReport() {
-        // Role-Based Access Check (using String.equals)
-        if (currentUser.getRole().equals("ADMIN") || currentUser.getRole().equals("MANAGER")) {
+        // Role-Based Access Check using 'instanceof'
+        // Admins and Managers can see the full report.
+        if (currentUser instanceof Admin || currentUser instanceof Manager) {
             System.out.println(attendanceSystem.generateReport());
             logger.logActivity(currentUser.getUsername() + " generated FULL attendance report.");
         } else {
+            // Employees can only see their own report
             System.out.println("--- Your Attendance Report ---");
             System.out.println(attendanceSystem.generateReport(currentUser.getUsername()));
             logger.logActivity(currentUser.getUsername() + " generated OWN attendance report.");
@@ -234,7 +233,9 @@ public class SmartOfficeSystem {
     }
 
     public void adminOnlyFeature() {
-        if (!currentUser.getRole().equals("ADMIN")) {
+        // Role-Based Access Check using 'instanceof'
+        // This checks if the 'currentUser' is NOT an Admin
+        if (!(currentUser instanceof Admin)) {
             System.out.println("Access Denied. This feature is for Admins only.");
             logger.logActivity("Access Denied (Admin) for " + currentUser.getUsername());
             return;

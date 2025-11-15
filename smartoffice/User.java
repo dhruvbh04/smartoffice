@@ -1,36 +1,23 @@
 package smartoffice;
 
 /**
- * Represents a user in the Smart Office System.
- * Simplified to use plain text passwords and String roles.
- * This class also demonstrates Requirement 10 (Overloaded Constructors).
+ * Requirement 2 (Abstract Class):
+ * Represents a base user in the Smart Office System.
+ * This is the parent class for Admin, Manager, and Employee.
  */
-public class User {
-    private String username;
-    private String password; // Changed from hashedPassword
-    private String role; // Changed from Role enum to String
+public abstract class User {
+    // These fields are common to all user types
+    protected String username;
+    protected String password;
 
     /**
-     * Requirement 10 (Overloaded Constructors - Constructor 1):
-     * A constructor that takes all essential user details.
+     * Base constructor for all User types.
      * @param username The user's login name.
      * @param password The user's password in plain text.
-     * @param role The user's role (e.g., "ADMIN", "MANAGER", "EMPLOYEE").
      */
-    public User(String username, String password, String role) {
+    public User(String username, String password) {
         this.username = username;
         this.password = password;
-        this.role = role;
-    }
-
-    /**
-     * Requirement 10 (Overloaded Constructors - Constructor 2):
-     * An alternative constructor for creating a default employee.
-     * @param username The user's login name.
-     * @param role The user's role.
-     */
-    public User(String username, String role) {
-        this(username, "defaultPass123", role); // Delegates to the other constructor
     }
 
     // --- Getters ---
@@ -39,12 +26,16 @@ public class User {
         return username;
     }
 
-    public String getRole() {
-        return role;
-    }
+    /**
+     * An abstract method that forces child classes (Admin, Manager, Employee)
+     * to provide their specific role as a String.
+     * @return The role name (e.g., "ADMIN", "EMPLOYEE").
+     */
+    public abstract String getRole();
 
     /**
      * Simulates password-based authentication.
+     * This method is shared by all child classes.
      * @param passwordToCheck The password to check.
      * @return true if the password is correct, false otherwise.
      */
@@ -52,6 +43,4 @@ public class User {
         // Simple plain text comparison
         return this.password.equals(passwordToCheck);
     }
-
-    // The hashPassword method has been removed.
 }
