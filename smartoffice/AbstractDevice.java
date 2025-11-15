@@ -4,7 +4,7 @@ package smartoffice;
  * Requirement 2 (Abstract Class):
  * Represents a generic office device.
  */
-public abstract class AbstractDevice implements Controllable {
+public abstract class AbstractDevice {
     protected String deviceId;
     protected String roomLocation;
     protected boolean isOn;
