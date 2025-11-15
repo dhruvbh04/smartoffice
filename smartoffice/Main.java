@@ -6,7 +6,7 @@ import java.util.Scanner;
  * Requirement 6 (Package): This file is part of the 'smartoffice' package.
  *
  * This is the main entry point for the Smart Office Management System.
- * It provides the CLI (Command Line Interface) as required by the prompt.
+ * It provides the CLI (Command Line Interface).
  *
  * Requirement 8 (I/O - Scanner): Uses the Scanner class for user input.
  */
@@ -125,16 +125,14 @@ public class Main {
 
     /**
      * Helper method to safely get an integer input from the user.
-     * This demonstrates Requirement 7 (Exception Handling - Case 2: Standard Exception).
+     * This demonstrates Requirement 7 (Exception Handling).
      * @return The integer entered by the user.
      */
     private static int getIntInput() {
         try {
-            // Requirement 12 (Wrappers): Using Integer.parseInt.
             int choice = Integer.parseInt(scanner.nextLine());
             return choice;
         } catch (NumberFormatException e) {
-            // Requirement 7 (Exception Handling - Standard)
             System.out.println("Invalid input. Please enter a number.");
             return -1; // Return a safe, invalid choice
         }

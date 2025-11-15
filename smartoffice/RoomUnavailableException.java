@@ -3,7 +3,7 @@ package smartoffice;
 /**
  * Requirement 7 (Exception Handling - Case 1: Custom Exception):
  * A custom exception thrown when a user tries to book a conference room
- * that is already reserved for the requested time slot.
+ * that is already reserved.
  */
 public class RoomUnavailableException extends Exception {
     /**

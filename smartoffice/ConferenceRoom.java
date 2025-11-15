@@ -1,28 +1,30 @@
 package smartoffice;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.Objects; 
+// We still need Objects for the .hash() method in the Booking class
 
 /**
  * Manages the booking and scheduling of a conference room.
- * This class also demonstrates Requirement 1 (Nested Class).
+ * Simplified to use a fixed-size array for bookings.
  */
 public class ConferenceRoom {
     private String roomId;
     private int capacity;
     private boolean hasProjector;
-    private List<Booking> bookings; // A list of its bookings
+    
+    // Use a fixed-size array for bookings
+    private static final int MAX_BOOKINGS = 50;
+    private Booking[] bookings;
+    private int bookingCount; // Counter for actual number of bookings
 
     /**
      * Requirement 1 (Nested Class - Non-Static Inner Class):
-     * A Booking object is intrinsically tied to a ConferenceRoom instance.
-     * It represents a single reservation for this room.
+     * A Booking object is tied to a ConferenceRoom instance.
      */
     public class Booking {
         private String employeeId;
-        private String timeSlot; // e.g., "10:00-11:00"
-        private long checkInTime; // System.currentTimeMillis()
+        private String timeSlot; 
+        private long checkInTime; 
 
         public Booking(String employeeId, String timeSlot) {
             this.employeeId = employeeId;
@@ -38,9 +40,6 @@ public class ConferenceRoom {
             return employeeId;
         }
 
-        /**
-         * Simulates checking into the room, fulfilling the "auto-release" feature.
-         */
         public void checkIn() {
             this.checkInTime = System.currentTimeMillis();
             System.out.println(employeeId + " checked into " + roomId + " for " + timeSlot);
@@ -50,23 +49,23 @@ public class ConferenceRoom {
             return this.checkInTime != 0;
         }
 
-        @Override
+        // Removed @Override
         public String toString() {
             return String.format("Slot: %s (Booked by: %s, Checked In: %s)",
                     timeSlot, employeeId, (isCheckedIn() ? "Yes" : "No"));
         }
 
-        @Override
+        // Removed @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Booking booking = (Booking) o;
-            // A booking is unique by its time slot within this room
             return timeSlot.equals(booking.timeSlot);
         }
 
-        @Override
+        // Removed @Override
         public int hashCode() {
+            // This import is okay as it's not a collection class
             return Objects.hash(timeSlot);
         }
     } // --- End of nested Booking class ---
@@ -77,7 +76,8 @@ public class ConferenceRoom {
         this.roomId = roomId;
         this.capacity = capacity;
         this.hasProjector = hasProjector;
-        this.bookings = new ArrayList<>();
+        this.bookings = new Booking[MAX_BOOKINGS]; // Initialize array
+        this.bookingCount = 0; // Initialize counter
     }
 
     public String getRoomId() {
@@ -90,7 +90,9 @@ public class ConferenceRoom {
      * @return true if available, false otherwise.
      */
     public boolean isAvailable(String timeSlot) {
-        for (Booking booking : bookings) {
+        // Loop from 0 to bookingCount
+        for (int i = 0; i < bookingCount; i++) {
+            Booking booking = bookings[i];
             if (booking.getTimeSlot().equals(timeSlot)) {
                 return false; // Slot is taken
             }
@@ -103,30 +105,61 @@ public class ConferenceRoom {
      * @param employeeId The ID of the employee booking the room.
      * @param timeSlot The desired time slot.
      * @return The new Booking object.
-     * @throws RoomUnavailableException If the room is already booked for that slot.
+     * @throws RoomUnavailableException If the room is already booked or full.
      */
     public Booking bookRoom(String employeeId, String timeSlot) throws RoomUnavailableException {
         if (!isAvailable(timeSlot)) {
-            // Requirement 7 (Exception Handling): Throwing the custom exception.
             throw new RoomUnavailableException("Room " + roomId + " is already booked for " + timeSlot);
         }
+        
+        // Check if the booking array is full
+        if (bookingCount >= MAX_BOOKINGS) {
+            System.out.println("Error: Room " + roomId + " has no more available booking slots.");
+            // We can re-use the exception
+            throw new RoomUnavailableException("Room " + roomId + " cannot accept more bookings (system limit reached).");
+        }
+
         Booking newBooking = new Booking(employeeId, timeSlot);
-        bookings.add(newBooking);
+        // Add to the array and increment the counter
+        bookings[bookingCount] = newBooking;
+        bookingCount++;
+        
         System.out.println("Room " + roomId + " successfully booked for " + timeSlot + " by " + employeeId);
         return newBooking;
     }
 
     /**
-     * Simulates the "Auto-release unused reservations" feature.
-     * In a real system, this would be run by a scheduler.
+     * Simulates "Auto-release unused reservations".
+     * This logic is complex with arrays, as it requires shifting elements.
      */
     public void autoReleaseUnusedBookings() {
         System.out.println("Checking for unused bookings in " + roomId + "...");
-        // This is a simple simulation. A real one would check time.
-        // We'll remove any booking that isn't checked in.
-        boolean removed = bookings.removeIf(booking -> !booking.isCheckedIn());
-        if (removed) {
-            System.out.println("Auto-released unused bookings.");
+        
+        int removedCount = 0;
+        int i = 0;
+        while (i < bookingCount) {
+            if (!bookings[i].isCheckedIn()) {
+                // This booking needs to be removed.
+                removedCount++;
+                
+                // Shift all subsequent elements one position to the left.
+                for (int j = i; j < bookingCount - 1; j++) {
+                    bookings[j] = bookings[j + 1];
+                }
+                
+                // Clear the last (now duplicate) element
+                bookings[bookingCount - 1] = null; 
+                bookingCount--; // Reduce the total count
+                
+                // Don't increment 'i' because the new element at 'i' needs to be checked
+            } else {
+                // This booking is fine, move to the next one
+                i++;
+            }
+        }
+
+        if (removedCount > 0) {
+            System.out.println("Auto-released " + removedCount + " unused bookings.");
         } else {
             System.out.println("No unused bookings to release.");
         }
@@ -137,13 +170,15 @@ public class ConferenceRoom {
      * @return A string listing all current bookings.
      */
     public String getAvailability() {
-        if (bookings.isEmpty()) {
+        if (bookingCount == 0) {
             return "Room " + roomId + " (Cap: " + capacity + ") is completely free.";
         }
         StringBuilder sb = new StringBuilder();
         sb.append("Bookings for ").append(roomId).append(":\n");
-        for (Booking booking : bookings) {
-            sb.append("  - ").append(booking.toString()).append("\n");
+        
+        // Loop from 0 to bookingCount
+        for (int i = 0; i < bookingCount; i++) {
+            sb.append("  - ").append(bookings[i].toString()).append("\n");
         }
         return sb.toString();
     }

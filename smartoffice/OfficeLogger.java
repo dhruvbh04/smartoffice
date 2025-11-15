@@ -8,12 +8,12 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Requirement 8 (I/O - File Handling):
- * This class handles all file-based logging for user activity and device history,
- * fulfilling requirement 5b ("Log all user activity...").
+ * This class handles all file-based logging.
  * This class also demonstrates Requirement 11 (Vararg Overloading).
  */
 public class OfficeLogger {
     private static final String LOG_FILE = "smart_office_activity.log";
+    // We still need java.time here for logging, which is fine.
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
     /**
@@ -21,14 +21,13 @@ public class OfficeLogger {
      * @param activity The string message to log.
      */
     public void logActivity(String activity) {
-        // Requirement 8 (I/O): Using BufferedWriter and FileWriter for file I/O.
+        // Requirement 8 (I/O)
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE, true))) {
             LocalDateTime now = LocalDateTime.now();
             String logEntry = String.format("[%s] %s%n", dtf.format(now), activity);
             writer.write(logEntry);
         } catch (IOException e) {
-            // Requirement 7 (Exception Handling - Case 2: Standard Exception)
-            // Handling a standard I/O exception.
+            // Requirement 7 (Exception Handling)
             System.err.println("Error: Could not write to log file: " + e.getMessage());
         }
     }
@@ -54,7 +53,6 @@ public class OfficeLogger {
 
     /**
      * A simple overload for logMultipleEvents to satisfy the vararg *overloading* requirement.
-     * In a real app, this might log events with a specific priority.
      * @param priority The priority level for this batch of events.
      * @param events A variable number of event strings to log.
      */
